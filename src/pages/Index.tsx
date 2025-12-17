@@ -5,11 +5,32 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Icon from "@/components/ui/icon";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
-  const [showModal, setShowModal] = useState(false);
+  const [showConsole, setShowConsole] = useState(false);
+  const [consoleStep, setConsoleStep] = useState(0);
+  const [selectedTariff, setSelectedTariff] = useState("");
+
+  const consoleSteps = [
+    { command: "biskvit init", output: "🍪 Инициализация Бисквит Хостинг...\n✓ Проверка системы\n✓ Подготовка окружения" },
+    { command: "biskvit show-tariffs", output: "" },
+    { command: "biskvit select", output: "" },
+  ];
+
+  const handleStartConsole = () => {
+    setShowConsole(true);
+    setConsoleStep(0);
+    setSelectedTariff("");
+    setTimeout(() => setConsoleStep(1), 1000);
+  };
+
+  const handleSelectTariff = (tariff: string) => {
+    setSelectedTariff(tariff);
+    setConsoleStep(3);
+  };
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -36,7 +57,7 @@ const Index = () => {
               <button onClick={() => scrollToSection("faq")} className="text-secondary-700 hover:text-primary-500 transition-colors">FAQ</button>
               <button onClick={() => scrollToSection("contact")} className="text-secondary-700 hover:text-primary-500 transition-colors">Контакты</button>
             </div>
-            <Button onClick={() => scrollToSection("pricing")} className="bg-primary-500 hover:bg-primary-600 text-white">
+            <Button onClick={handleStartConsole} className="bg-primary-500 hover:bg-primary-600 text-white">
               Начать
             </Button>
           </div>
@@ -57,7 +78,7 @@ const Index = () => {
               Быстрые серверы, SSD-хранилище и оптимизированная инфраструктура для вашего успеха в интернете
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={() => scrollToSection("pricing")} size="lg" className="bg-primary-500 hover:bg-primary-600 text-white text-lg px-8 transition-transform hover:scale-105">
+              <Button onClick={handleStartConsole} size="lg" className="bg-primary-500 hover:bg-primary-600 text-white text-lg px-8 transition-transform hover:scale-105">
                 Попробовать бесплатно
                 <Icon name="ArrowRight" className="ml-2" size={20} />
               </Button>
@@ -749,6 +770,135 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <Dialog open={showConsole} onOpenChange={setShowConsole}>
+        <DialogContent className="max-w-4xl bg-secondary-900 text-white border-2 border-secondary-700">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Icon name="Terminal" className="text-primary-500" size={24} />
+              Консоль Бисквит Хостинг
+            </DialogTitle>
+            <DialogDescription className="text-secondary-400">
+              Выберите тариф и начните работу с вашим хостингом
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-secondary-800 rounded-lg p-6 font-mono text-sm max-h-[600px] overflow-y-auto">
+            {consoleStep >= 1 && (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-primary-500">user@biskvit:~$</span>
+                  <span className="text-secondary-300">{consoleSteps[0].command}</span>
+                </div>
+                <div className="text-secondary-400 pl-4 mb-4 whitespace-pre-line">
+                  {consoleSteps[0].output}
+                </div>
+              </>
+            )}
+
+            {consoleStep >= 1 && (
+              <>
+                <div className="flex items-center gap-2 mb-2 mt-6">
+                  <span className="text-primary-500">user@biskvit:~$</span>
+                  <span className="text-secondary-300">{consoleSteps[1].command}</span>
+                </div>
+                <div className="pl-4 mb-4">
+                  <div className="text-primary-400 mb-3">📋 Доступные тарифы:</div>
+                  <div className="space-y-3">
+                    <div 
+                      onClick={() => handleSelectTariff("Стартовый")}
+                      className="bg-secondary-900 rounded p-4 cursor-pointer hover:bg-secondary-700 transition-colors border-2 border-transparent hover:border-primary-500"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-semibold">1. Стартовый</span>
+                        <span className="text-primary-400 font-bold">₽299/мес</span>
+                      </div>
+                      <div className="text-secondary-400 text-xs space-y-1">
+                        <div>• SSD: 10 GB</div>
+                        <div>• Трафик: 100 GB</div>
+                        <div>• Сайтов: 1</div>
+                      </div>
+                    </div>
+                    <div 
+                      onClick={() => handleSelectTariff("Бизнес")}
+                      className="bg-secondary-900 rounded p-4 cursor-pointer hover:bg-secondary-700 transition-colors border-2 border-primary-500"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-semibold">2. Бизнес</span>
+                          <Badge className="bg-primary-500 text-white text-xs">Популярный</Badge>
+                        </div>
+                        <span className="text-primary-400 font-bold">₽799/мес</span>
+                      </div>
+                      <div className="text-secondary-400 text-xs space-y-1">
+                        <div>• SSD: 50 GB</div>
+                        <div>• Трафик: Безлимит</div>
+                        <div>• Сайтов: 5</div>
+                      </div>
+                    </div>
+                    <div 
+                      onClick={() => handleSelectTariff("Профессиональный")}
+                      className="bg-secondary-900 rounded p-4 cursor-pointer hover:bg-secondary-700 transition-colors border-2 border-transparent hover:border-primary-500"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-semibold">3. Профессиональный</span>
+                        <span className="text-primary-400 font-bold">₽1499/мес</span>
+                      </div>
+                      <div className="text-secondary-400 text-xs space-y-1">
+                        <div>• SSD: 200 GB</div>
+                        <div>• Трафик: Безлимит</div>
+                        <div>• Сайтов: Безлимит</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {consoleStep >= 3 && selectedTariff && (
+              <>
+                <div className="flex items-center gap-2 mb-2 mt-6">
+                  <span className="text-primary-500">user@biskvit:~$</span>
+                  <span className="text-secondary-300">biskvit select "{selectedTariff}"</span>
+                </div>
+                <div className="pl-4 mb-4">
+                  <div className="bg-secondary-900 rounded p-4 border-2 border-primary-500">
+                    <div className="text-primary-400 mb-2">✓ Тариф выбран: <span className="text-white font-semibold">{selectedTariff}</span></div>
+                    <div className="text-secondary-400 text-xs space-y-2 mt-3">
+                      <div>✓ Создание учетной записи...</div>
+                      <div>✓ Настройка серверного окружения...</div>
+                      <div>✓ Установка SSL-сертификата...</div>
+                      <div>✓ Подготовка файловой системы...</div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-secondary-700">
+                      <div className="text-primary-400 mb-2">🎉 Всё готово!</div>
+                      <div className="text-secondary-300 text-xs mb-3">
+                        Ваш хостинг активирован и готов к использованию.
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          setShowConsole(false);
+                          scrollToSection("contact");
+                        }}
+                        className="w-full bg-primary-500 hover:bg-primary-600 text-white"
+                      >
+                        Связаться с нами
+                        <Icon name="ArrowRight" className="ml-2" size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {consoleStep < 3 && (
+              <div className="flex items-center gap-2 mt-4">
+                <span className="text-primary-500">user@biskvit:~$</span>
+                <span className="text-secondary-300 animate-pulse">_</span>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
