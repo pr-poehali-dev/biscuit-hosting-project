@@ -15,6 +15,8 @@ const Index = () => {
   const [showConsole, setShowConsole] = useState(false);
   const [consoleStep, setConsoleStep] = useState(0);
   const [selectedTariff, setSelectedTariff] = useState("");
+  const [showPayment, setShowPayment] = useState(false);
+  const [tariffPrice, setTariffPrice] = useState(0);
 
   const consoleSteps = [
     { command: "biskvit init", output: "🍪 Инициализация Бисквит Хостинг...\n✓ Проверка системы\n✓ Подготовка окружения" },
@@ -29,9 +31,17 @@ const Index = () => {
     setTimeout(() => setConsoleStep(1), 1000);
   };
 
-  const handleSelectTariff = (tariff: string) => {
+  const handleSelectTariff = (tariff: string, price: number) => {
     setSelectedTariff(tariff);
-    setConsoleStep(3);
+    setTariffPrice(price);
+    setShowConsole(false);
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    setShowConsole(true);
+    setTimeout(() => setConsoleStep(3), 500);
   };
 
   const scrollToSection = (id: string) => {
@@ -807,7 +817,7 @@ const Index = () => {
                   <div className="text-primary-400 mb-3">📋 Доступные тарифы:</div>
                   <div className="space-y-3">
                     <div 
-                      onClick={() => handleSelectTariff("Стартовый")}
+                      onClick={() => handleSelectTariff("Стартовый", 299)}
                       className="bg-secondary-900 rounded p-4 cursor-pointer hover:bg-secondary-700 transition-colors border-2 border-transparent hover:border-primary-500"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -821,7 +831,7 @@ const Index = () => {
                       </div>
                     </div>
                     <div 
-                      onClick={() => handleSelectTariff("Бизнес")}
+                      onClick={() => handleSelectTariff("Бизнес", 799)}
                       className="bg-secondary-900 rounded p-4 cursor-pointer hover:bg-secondary-700 transition-colors border-2 border-primary-500"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -838,7 +848,7 @@ const Index = () => {
                       </div>
                     </div>
                     <div 
-                      onClick={() => handleSelectTariff("Профессиональный")}
+                      onClick={() => handleSelectTariff("Профессиональный", 1499)}
                       className="bg-secondary-900 rounded p-4 cursor-pointer hover:bg-secondary-700 transition-colors border-2 border-transparent hover:border-primary-500"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -911,6 +921,82 @@ const Index = () => {
                 <span className="text-secondary-300 animate-pulse">_</span>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="CreditCard" className="text-primary-500" size={24} />
+              Оплата тарифа
+            </DialogTitle>
+            <DialogDescription>
+              Выберите способ оплаты для активации тарифа "{selectedTariff}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Card className="border-2 border-primary-500 bg-primary-50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-semibold text-secondary-900">Тариф: {selectedTariff}</span>
+                  <span className="text-2xl font-bold text-primary-600">₽{tariffPrice}</span>
+                </div>
+                <div className="text-sm text-secondary-600">
+                  Первый месяц • Автопродление
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-secondary-900">Способ оплаты:</div>
+              
+              <Button
+                onClick={handlePaymentSuccess}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white h-14 text-base"
+              >
+                <Icon name="Smartphone" className="mr-2" size={20} />
+                Оплатить через СБП
+                <Icon name="ArrowRight" className="ml-2" size={20} />
+              </Button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="border-secondary-300 text-secondary-700 hover:bg-secondary-100"
+                  onClick={handlePaymentSuccess}
+                >
+                  <Icon name="CreditCard" className="mr-2" size={16} />
+                  Картой
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-secondary-300 text-secondary-700 hover:bg-secondary-100"
+                  onClick={handlePaymentSuccess}
+                >
+                  <Icon name="Wallet" className="mr-2" size={16} />
+                  ЮMoney
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-secondary-100 rounded-lg p-3 text-xs text-secondary-600">
+              <div className="flex items-start gap-2">
+                <Icon name="ShieldCheck" className="text-green-600 flex-shrink-0 mt-0.5" size={16} />
+                <div>
+                  Защищенная оплата. Деньги поступят после подтверждения. Автоматическое продление можно отключить в любой момент.
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setShowPayment(false)}
+              variant="ghost"
+              className="w-full text-secondary-600"
+            >
+              Отмена
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

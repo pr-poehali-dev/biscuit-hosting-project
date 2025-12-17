@@ -42,6 +42,11 @@ const Console = () => {
   const [showEditor, setShowEditor] = useState(false);
   const [editingFile, setEditingFile] = useState<string>("");
   const [fileContent, setFileContent] = useState("");
+  const [showViewer, setShowViewer] = useState(false);
+  const [viewingFile, setViewingFile] = useState<string>("");
+  const [cpuUsage, setCpuUsage] = useState(12);
+  const [ramUsage, setRamUsage] = useState(25);
+  const [diskUsage, setDiskUsage] = useState(84);
 
   const handleCommand = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +127,18 @@ const Console = () => {
     setTerminalHistory([...terminalHistory, messages[action]]);
   };
 
+  const handleDeleteFile = (fileName: string) => {
+    setFiles(files.filter(f => f.name !== fileName));
+    setTerminalHistory([...terminalHistory, `✓ Файл ${fileName} удалён`]);
+  };
+
+  const handleViewFile = (fileName: string) => {
+    setViewingFile(fileName);
+    const mockContent = `<?php\n// ${fileName}\necho "Hello from Biskvit Hosting!";\n?>`;
+    setFileContent(mockContent);
+    setShowViewer(true);
+  };
+
   return (
     <div className="min-h-screen bg-secondary-900">
       <nav className="bg-secondary-800 border-b border-secondary-700">
@@ -198,8 +215,12 @@ const Console = () => {
             </CardHeader>
           </Card>
 
-          <Tabs defaultValue="terminal" className="w-full">
+          <Tabs defaultValue="monitor" className="w-full">
             <TabsList className="bg-secondary-800 border border-secondary-700">
+              <TabsTrigger value="monitor" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white">
+                <Icon name="Activity" className="mr-2" size={16} />
+                Мониторинг
+              </TabsTrigger>
               <TabsTrigger value="terminal" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white">
                 <Icon name="Terminal" className="mr-2" size={16} />
                 Терминал
@@ -213,6 +234,100 @@ const Console = () => {
                 SFTP клиент
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="monitor" className="mt-4">
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <Card className="bg-secondary-800 border-2 border-secondary-700">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-secondary-400 flex items-center gap-2">
+                      <Icon name="Cpu" className="text-blue-400" size={16} />
+                      CPU
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white mb-2">{cpuUsage}%</div>
+                    <div className="w-full bg-secondary-700 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full transition-all" style={{ width: `${cpuUsage}%` }}></div>
+                    </div>
+                    <div className="text-xs text-secondary-400 mt-2">2.4 GHz (4 ядра)</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-secondary-800 border-2 border-secondary-700">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-secondary-400 flex items-center gap-2">
+                      <Icon name="MemoryStick" className="text-green-400" size={16} />
+                      RAM
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white mb-2">{ramUsage}%</div>
+                    <div className="w-full bg-secondary-700 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${ramUsage}%` }}></div>
+                    </div>
+                    <div className="text-xs text-secondary-400 mt-2">512 MB / 2 GB</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-secondary-800 border-2 border-secondary-700">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-secondary-400 flex items-center gap-2">
+                      <Icon name="HardDrive" className="text-primary-400" size={16} />
+                      Диск
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white mb-2">{diskUsage}%</div>
+                    <div className="w-full bg-secondary-700 rounded-full h-2">
+                      <div className="bg-primary-500 h-2 rounded-full transition-all" style={{ width: `${diskUsage}%` }}></div>
+                    </div>
+                    <div className="text-xs text-secondary-400 mt-2">42 GB / 50 GB</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="bg-secondary-800 border-2 border-secondary-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Icon name="BarChart3" className="text-primary-500" size={20} />
+                    График загрузки (последние 24 часа)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px] flex items-end gap-2">
+                    {Array.from({ length: 24 }, (_, i) => {
+                      const cpuHeight = Math.random() * 80 + 10;
+                      const ramHeight = Math.random() * 60 + 10;
+                      const diskHeight = Math.random() * 90 + 10;
+                      return (
+                        <div key={i} className="flex-1 flex flex-col gap-1 items-center">
+                          <div className="w-full space-y-1">
+                            <div className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-400" style={{ height: `${cpuHeight}%` }} title={`CPU: ${Math.round(cpuHeight)}%`}></div>
+                            <div className="w-full bg-green-500 transition-all hover:bg-green-400" style={{ height: `${ramHeight}%` }} title={`RAM: ${Math.round(ramHeight)}%`}></div>
+                            <div className="w-full bg-primary-500 rounded-b transition-all hover:bg-primary-400" style={{ height: `${diskHeight}%` }} title={`Disk: ${Math.round(diskHeight)}%`}></div>
+                          </div>
+                          <span className="text-xs text-secondary-500">{i}ч</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-center gap-6 mt-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                      <span className="text-secondary-400">CPU</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded"></div>
+                      <span className="text-secondary-400">RAM</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-primary-500 rounded"></div>
+                      <span className="text-secondary-400">Disk</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="terminal" className="mt-4">
               <Card className="bg-secondary-800 border-2 border-secondary-700">
@@ -314,8 +429,17 @@ const Console = () => {
                           <div className="text-secondary-400 text-sm mr-4">{file.size}</div>
                         )}
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white">
-                            <Icon name="Download" size={16} />
+                          <Button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (file.type === "file") handleViewFile(file.name);
+                            }}
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-secondary-400 hover:text-white"
+                            title="Просмотр"
+                          >
+                            <Icon name="Eye" size={16} />
                           </Button>
                           <Button 
                             onClick={(e) => {
@@ -325,10 +449,23 @@ const Console = () => {
                             variant="ghost" 
                             size="sm" 
                             className="text-secondary-400 hover:text-white"
+                            title="Редактировать"
                           >
                             <Icon name="Edit" size={16} />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                          <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white" title="Скачать">
+                            <Icon name="Download" size={16} />
+                          </Button>
+                          <Button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFile(file.name);
+                            }}
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-400 hover:text-red-300"
+                            title="Удалить"
+                          >
                             <Icon name="Trash2" size={16} />
                           </Button>
                         </div>
@@ -529,6 +666,41 @@ const Console = () => {
               <Button onClick={handleSaveFile} className="bg-primary-500 hover:bg-primary-600 text-white">
                 <Icon name="Save" className="mr-2" size={16} />
                 Сохранить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showViewer} onOpenChange={setShowViewer}>
+        <DialogContent className="max-w-4xl h-[80vh] bg-secondary-800 border-secondary-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Eye" className="text-primary-500" size={20} />
+              Просмотр файла: {viewingFile}
+            </DialogTitle>
+            <DialogDescription className="text-secondary-400">
+              Только для чтения. Используйте кнопку редактирования для изменения файла.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 h-full">
+            <ScrollArea className="flex-1 font-mono text-sm bg-secondary-900 border border-secondary-700 rounded-md p-4">
+              <pre className="text-secondary-100 whitespace-pre-wrap">{fileContent}</pre>
+            </ScrollArea>
+            <div className="flex gap-2 justify-end">
+              <Button onClick={() => setShowViewer(false)} variant="outline" className="border-secondary-600 text-white hover:bg-secondary-700">
+                Закрыть
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowViewer(false);
+                  setEditingFile(viewingFile);
+                  setShowEditor(true);
+                }}
+                className="bg-primary-500 hover:bg-primary-600 text-white"
+              >
+                <Icon name="Edit" className="mr-2" size={16} />
+                Редактировать
               </Button>
             </div>
           </div>
