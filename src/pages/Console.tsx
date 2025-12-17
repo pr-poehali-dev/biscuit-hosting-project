@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Icon from "@/components/ui/icon";
 import { useNavigate } from "react-router-dom";
 
@@ -36,6 +38,10 @@ const Console = () => {
   const [sftpHost, setSftpHost] = useState("sftp.biskvit-hosting.ru");
   const [sftpPort, setSftpPort] = useState("22");
   const [sftpUser, setSftpUser] = useState("");
+  const [serverStatus, setServerStatus] = useState<"running" | "stopped">("running");
+  const [showEditor, setShowEditor] = useState(false);
+  const [editingFile, setEditingFile] = useState<string>("");
+  const [fileContent, setFileContent] = useState("");
 
   const handleCommand = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +93,35 @@ const Console = () => {
     }
   };
 
+  const handleEditFile = (fileName: string) => {
+    setEditingFile(fileName);
+    const mockContent = `<?php\n// ${fileName}\necho "Hello from Biskvit Hosting!";\n?>`;
+    setFileContent(mockContent);
+    setShowEditor(true);
+  };
+
+  const handleSaveFile = () => {
+    setShowEditor(false);
+    setTerminalHistory([...terminalHistory, `✓ Файл ${editingFile} успешно сохранён`]);
+  };
+
+  const handleServerAction = (action: "start" | "stop" | "restart") => {
+    const messages = {
+      start: "✓ Сервер запущен",
+      stop: "✓ Сервер остановлен",
+      restart: "✓ Сервер перезапущен"
+    };
+    
+    if (action === "start") setServerStatus("running");
+    if (action === "stop") setServerStatus("stopped");
+    if (action === "restart") {
+      setServerStatus("stopped");
+      setTimeout(() => setServerStatus("running"), 1000);
+    }
+    
+    setTerminalHistory([...terminalHistory, messages[action]]);
+  };
+
   return (
     <div className="min-h-screen bg-secondary-900">
       <nav className="bg-secondary-800 border-b border-secondary-700">
@@ -102,9 +137,43 @@ const Console = () => {
               <Badge className="bg-primary-500 text-white">Консоль</Badge>
             </div>
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 text-secondary-400 text-sm">
-                <Icon name="Server" size={16} />
-                <span>srv-12.biskvit.ru</span>
+              <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-2 text-secondary-400 text-sm">
+                  <div className={`w-2 h-2 rounded-full ${serverStatus === "running" ? "bg-green-500" : "bg-red-500"}`}></div>
+                  <Icon name="Server" size={16} />
+                  <span>srv-12.biskvit.ru</span>
+                  <Badge className={serverStatus === "running" ? "bg-green-600 text-white" : "bg-red-600 text-white"}>
+                    {serverStatus === "running" ? "Онлайн" : "Оффлайн"}
+                  </Badge>
+                </div>
+                <div className="flex gap-1 ml-4">
+                  <Button 
+                    onClick={() => handleServerAction("start")} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-green-400 hover:text-green-300 hover:bg-secondary-700"
+                    disabled={serverStatus === "running"}
+                  >
+                    <Icon name="Play" size={16} />
+                  </Button>
+                  <Button 
+                    onClick={() => handleServerAction("stop")} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-red-400 hover:text-red-300 hover:bg-secondary-700"
+                    disabled={serverStatus === "stopped"}
+                  >
+                    <Icon name="Square" size={16} />
+                  </Button>
+                  <Button 
+                    onClick={() => handleServerAction("restart")} 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-primary-400 hover:text-primary-300 hover:bg-secondary-700"
+                  >
+                    <Icon name="RotateCw" size={16} />
+                  </Button>
+                </div>
               </div>
               <Button onClick={() => navigate("/")} variant="outline" className="border-secondary-600 text-white hover:bg-secondary-700">
                 <Icon name="Home" className="mr-2" size={16} />
@@ -248,7 +317,15 @@ const Console = () => {
                           <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white">
                             <Icon name="Download" size={16} />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white">
+                          <Button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (file.type === "file") handleEditFile(file.name);
+                            }}
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-secondary-400 hover:text-white"
+                          >
                             <Icon name="Edit" size={16} />
                           </Button>
                           <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
@@ -426,6 +503,37 @@ const Console = () => {
           </Tabs>
         </div>
       </div>
+
+      <Dialog open={showEditor} onOpenChange={setShowEditor}>
+        <DialogContent className="max-w-4xl h-[80vh] bg-secondary-800 border-secondary-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="FileCode" className="text-primary-500" size={20} />
+              Редактор кода: {editingFile}
+            </DialogTitle>
+            <DialogDescription className="text-secondary-400">
+              Редактируйте файл и нажмите "Сохранить" для применения изменений
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 h-full">
+            <Textarea
+              value={fileContent}
+              onChange={(e) => setFileContent(e.target.value)}
+              className="flex-1 font-mono text-sm bg-secondary-900 border-secondary-700 text-secondary-100 resize-none"
+              placeholder="Содержимое файла..."
+            />
+            <div className="flex gap-2 justify-end">
+              <Button onClick={() => setShowEditor(false)} variant="outline" className="border-secondary-600 text-white hover:bg-secondary-700">
+                Отмена
+              </Button>
+              <Button onClick={handleSaveFile} className="bg-primary-500 hover:bg-primary-600 text-white">
+                <Icon name="Save" className="mr-2" size={16} />
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
