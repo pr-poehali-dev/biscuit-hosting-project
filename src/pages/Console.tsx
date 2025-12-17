@@ -1,0 +1,433 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Icon from "@/components/ui/icon";
+import { useNavigate } from "react-router-dom";
+
+interface FileItem {
+  name: string;
+  type: "file" | "folder";
+  size?: string;
+  modified: string;
+}
+
+const Console = () => {
+  const navigate = useNavigate();
+  const [terminalHistory, setTerminalHistory] = useState<string[]>([
+    "Добро пожаловать в Бисквит Хостинг Terminal",
+    "Введите 'help' для списка доступных команд",
+  ]);
+  const [currentCommand, setCurrentCommand] = useState("");
+  const [currentPath, setCurrentPath] = useState("/home/user");
+  const [files, setFiles] = useState<FileItem[]>([
+    { name: "public_html", type: "folder", modified: "2024-12-18 10:30" },
+    { name: "logs", type: "folder", modified: "2024-12-18 09:15" },
+    { name: "backups", type: "folder", modified: "2024-12-17 22:00" },
+    { name: "index.php", type: "file", size: "4.2 KB", modified: "2024-12-18 11:45" },
+    { name: "config.json", type: "file", size: "1.8 KB", modified: "2024-12-18 10:20" },
+    { name: ".htaccess", type: "file", size: "892 B", modified: "2024-12-15 14:30" },
+  ]);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [sftpConnected, setSftpConnected] = useState(false);
+  const [sftpHost, setSftpHost] = useState("sftp.biskvit-hosting.ru");
+  const [sftpPort, setSftpPort] = useState("22");
+  const [sftpUser, setSftpUser] = useState("");
+
+  const handleCommand = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentCommand.trim()) return;
+
+    const cmd = currentCommand.toLowerCase().trim();
+    let response = "";
+
+    switch (cmd) {
+      case "help":
+        response = "Доступные команды:\n  ls - список файлов\n  pwd - текущий путь\n  clear - очистить консоль\n  status - статус сервера\n  tariff - информация о тарифе";
+        break;
+      case "ls":
+        response = files.map(f => `${f.type === "folder" ? "📁" : "📄"} ${f.name}`).join("\n");
+        break;
+      case "pwd":
+        response = currentPath;
+        break;
+      case "clear":
+        setTerminalHistory([]);
+        setCurrentCommand("");
+        return;
+      case "status":
+        response = "✓ Сервер: Онлайн\n✓ CPU: 12%\n✓ RAM: 256MB / 2GB\n✓ Disk: 42GB / 50GB";
+        break;
+      case "tariff":
+        response = "Тариф: Бизнес\nЦена: ₽799/мес\nSSD: 50 GB\nСайтов: 5\nТрафик: Безлимит";
+        break;
+      default:
+        response = `Команда '${cmd}' не найдена. Введите 'help' для списка команд.`;
+    }
+
+    setTerminalHistory([...terminalHistory, `user@biskvit:${currentPath}$ ${currentCommand}`, response]);
+    setCurrentCommand("");
+  };
+
+  const handleSftpConnect = () => {
+    if (!sftpUser.trim()) return;
+    setSftpConnected(true);
+    setTerminalHistory([...terminalHistory, `✓ SFTP подключение к ${sftpHost}:${sftpPort} установлено`]);
+  };
+
+  const handleFileClick = (file: FileItem) => {
+    if (file.type === "folder") {
+      setCurrentPath(`${currentPath}/${file.name}`);
+      setSelectedFile(null);
+    } else {
+      setSelectedFile(file.name);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-secondary-900">
+      <nav className="bg-secondary-800 border-b border-secondary-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button onClick={() => navigate("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+                  <Icon name="Cookie" className="text-white" size={24} />
+                </div>
+                <span className="text-xl font-heading font-bold text-white">Бисквит Хостинг</span>
+              </button>
+              <Badge className="bg-primary-500 text-white">Консоль</Badge>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-2 text-secondary-400 text-sm">
+                <Icon name="Server" size={16} />
+                <span>srv-12.biskvit.ru</span>
+              </div>
+              <Button onClick={() => navigate("/")} variant="outline" className="border-secondary-600 text-white hover:bg-secondary-700">
+                <Icon name="Home" className="mr-2" size={16} />
+                Главная
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid gap-6">
+          <Card className="bg-secondary-800 border-secondary-700 text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Server" className="text-primary-500" size={24} />
+                Панель управления хостингом
+              </CardTitle>
+              <CardDescription className="text-secondary-400">
+                Управляйте вашим сервером через терминал, файловый менеджер и SFTP
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Tabs defaultValue="terminal" className="w-full">
+            <TabsList className="bg-secondary-800 border border-secondary-700">
+              <TabsTrigger value="terminal" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white">
+                <Icon name="Terminal" className="mr-2" size={16} />
+                Терминал
+              </TabsTrigger>
+              <TabsTrigger value="files" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white">
+                <Icon name="Folder" className="mr-2" size={16} />
+                Файловый менеджер
+              </TabsTrigger>
+              <TabsTrigger value="sftp" className="data-[state=active]:bg-primary-500 data-[state=active]:text-white">
+                <Icon name="HardDrive" className="mr-2" size={16} />
+                SFTP клиент
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="terminal" className="mt-4">
+              <Card className="bg-secondary-800 border-2 border-secondary-700">
+                <CardHeader className="border-b border-secondary-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      </div>
+                      <span className="text-secondary-400 text-sm font-mono ml-4">bash</span>
+                    </div>
+                    <Button
+                      onClick={() => setTerminalHistory([])}
+                      variant="ghost"
+                      size="sm"
+                      className="text-secondary-400 hover:text-white"
+                    >
+                      <Icon name="Trash2" size={16} />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[500px] p-6 font-mono text-sm">
+                    <div className="space-y-2">
+                      {terminalHistory.map((line, index) => (
+                        <div key={index} className={line.includes("$") ? "text-primary-400" : "text-secondary-300 whitespace-pre-line"}>
+                          {line}
+                        </div>
+                      ))}
+                      <form onSubmit={handleCommand} className="flex items-center gap-2 mt-4">
+                        <span className="text-primary-500">user@biskvit:{currentPath}$</span>
+                        <Input
+                          value={currentCommand}
+                          onChange={(e) => setCurrentCommand(e.target.value)}
+                          className="flex-1 bg-transparent border-none text-secondary-300 focus-visible:ring-0 p-0"
+                          placeholder="Введите команду..."
+                          autoFocus
+                        />
+                      </form>
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="files" className="mt-4">
+              <Card className="bg-secondary-800 border-2 border-secondary-700">
+                <CardHeader className="border-b border-secondary-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-secondary-300">
+                      <Icon name="Folder" className="text-primary-500" size={20} />
+                      <span className="font-mono text-sm">{currentPath}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="border-secondary-600 text-white hover:bg-secondary-700">
+                        <Icon name="Upload" className="mr-2" size={16} />
+                        Загрузить
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-secondary-600 text-white hover:bg-secondary-700">
+                        <Icon name="FolderPlus" className="mr-2" size={16} />
+                        Новая папка
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-secondary-700">
+                    {currentPath !== "/home/user" && (
+                      <div
+                        onClick={() => setCurrentPath(currentPath.split("/").slice(0, -1).join("/") || "/home/user")}
+                        className="flex items-center gap-3 p-4 hover:bg-secondary-700 cursor-pointer transition-colors"
+                      >
+                        <Icon name="ArrowLeft" className="text-primary-500" size={20} />
+                        <span className="text-secondary-300">Назад</span>
+                      </div>
+                    )}
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleFileClick(file)}
+                        className={`flex items-center justify-between p-4 hover:bg-secondary-700 cursor-pointer transition-colors ${
+                          selectedFile === file.name ? "bg-secondary-700" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <Icon
+                            name={file.type === "folder" ? "Folder" : "FileText"}
+                            className={file.type === "folder" ? "text-primary-400" : "text-secondary-500"}
+                            size={20}
+                          />
+                          <div className="flex-1">
+                            <div className="text-white font-medium">{file.name}</div>
+                            <div className="text-secondary-400 text-xs">{file.modified}</div>
+                          </div>
+                        </div>
+                        {file.size && (
+                          <div className="text-secondary-400 text-sm mr-4">{file.size}</div>
+                        )}
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white">
+                            <Icon name="Download" size={16} />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white">
+                            <Icon name="Edit" size={16} />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                            <Icon name="Trash2" size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sftp" className="mt-4">
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="bg-secondary-800 border-2 border-secondary-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Icon name="Settings" className="text-primary-500" size={20} />
+                      SFTP Подключение
+                    </CardTitle>
+                    <CardDescription className="text-secondary-400">
+                      Настройте параметры SFTP соединения
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-secondary-300 text-sm mb-2 block">Хост</label>
+                      <Input
+                        value={sftpHost}
+                        onChange={(e) => setSftpHost(e.target.value)}
+                        className="bg-secondary-900 border-secondary-700 text-white"
+                        placeholder="sftp.example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-secondary-300 text-sm mb-2 block">Порт</label>
+                      <Input
+                        value={sftpPort}
+                        onChange={(e) => setSftpPort(e.target.value)}
+                        className="bg-secondary-900 border-secondary-700 text-white"
+                        placeholder="22"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-secondary-300 text-sm mb-2 block">Пользователь</label>
+                      <Input
+                        value={sftpUser}
+                        onChange={(e) => setSftpUser(e.target.value)}
+                        className="bg-secondary-900 border-secondary-700 text-white"
+                        placeholder="username"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-secondary-300 text-sm mb-2 block">Пароль</label>
+                      <Input
+                        type="password"
+                        className="bg-secondary-900 border-secondary-700 text-white"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSftpConnect}
+                      className="w-full bg-primary-500 hover:bg-primary-600 text-white"
+                      disabled={sftpConnected}
+                    >
+                      {sftpConnected ? (
+                        <>
+                          <Icon name="Check" className="mr-2" size={16} />
+                          Подключено
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="Link" className="mr-2" size={16} />
+                          Подключиться
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-secondary-800 border-2 border-secondary-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Icon name="Info" className="text-primary-500" size={20} />
+                      Информация о подключении
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {sftpConnected ? (
+                      <div className="space-y-4">
+                        <div className="bg-secondary-900 rounded-lg p-4 border-2 border-primary-500">
+                          <div className="flex items-center gap-2 text-primary-400 mb-3">
+                            <Icon name="CheckCircle" size={20} />
+                            <span className="font-semibold">SFTP соединение активно</span>
+                          </div>
+                          <div className="space-y-2 text-sm text-secondary-300">
+                            <div className="flex justify-between">
+                              <span>Сервер:</span>
+                              <span className="text-white">{sftpHost}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Порт:</span>
+                              <span className="text-white">{sftpPort}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Пользователь:</span>
+                              <span className="text-white">{sftpUser}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Протокол:</span>
+                              <span className="text-white">SFTP v3</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => setSftpConnected(false)}
+                          variant="outline"
+                          className="w-full border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                        >
+                          <Icon name="X" className="mr-2" size={16} />
+                          Отключиться
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Icon name="Cloud" className="text-secondary-600 mx-auto mb-4" size={48} />
+                        <p className="text-secondary-400">
+                          Заполните параметры подключения и нажмите "Подключиться"
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {sftpConnected && (
+                <Card className="bg-secondary-800 border-2 border-secondary-700 mt-6">
+                  <CardHeader className="border-b border-secondary-700">
+                    <CardTitle className="text-white">Удалённые файлы</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-secondary-700">
+                      {files.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-4 hover:bg-secondary-700 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon
+                              name={file.type === "folder" ? "Folder" : "FileText"}
+                              className={file.type === "folder" ? "text-primary-400" : "text-secondary-500"}
+                              size={20}
+                            />
+                            <div>
+                              <div className="text-white font-medium">{file.name}</div>
+                              <div className="text-secondary-400 text-xs">{file.modified}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            {file.size && (
+                              <div className="text-secondary-400 text-sm">{file.size}</div>
+                            )}
+                            <Button variant="ghost" size="sm" className="text-secondary-400 hover:text-white">
+                              <Icon name="Download" size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Console;

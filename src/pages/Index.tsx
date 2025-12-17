@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Icon from "@/components/ui/icon";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("home");
   const [showConsole, setShowConsole] = useState(false);
   const [consoleStep, setConsoleStep] = useState(0);
@@ -874,16 +876,29 @@ const Index = () => {
                       <div className="text-secondary-300 text-xs mb-3">
                         Ваш хостинг активирован и готов к использованию.
                       </div>
-                      <Button 
-                        onClick={() => {
-                          setShowConsole(false);
-                          scrollToSection("contact");
-                        }}
-                        className="w-full bg-primary-500 hover:bg-primary-600 text-white"
-                      >
-                        Связаться с нами
-                        <Icon name="ArrowRight" className="ml-2" size={16} />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => {
+                            setShowConsole(false);
+                            navigate("/console");
+                          }}
+                          className="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+                        >
+                          Открыть консоль
+                          <Icon name="Terminal" className="ml-2" size={16} />
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setShowConsole(false);
+                            scrollToSection("contact");
+                          }}
+                          variant="outline"
+                          className="flex-1 border-secondary-600 text-secondary-300 hover:bg-secondary-800"
+                        >
+                          Связаться
+                          <Icon name="ArrowRight" className="ml-2" size={16} />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
