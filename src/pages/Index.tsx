@@ -17,6 +17,10 @@ const Index = () => {
   const [selectedTariff, setSelectedTariff] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [tariffPrice, setTariffPrice] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [showServerStart, setShowServerStart] = useState(false);
+  const [serverStartProgress, setServerStartProgress] = useState(0);
 
   const consoleSteps = [
     { command: "biskvit init", output: "🍪 Инициализация Бисквит Хостинг...\n✓ Проверка системы\n✓ Подготовка окружения" },
@@ -40,8 +44,33 @@ const Index = () => {
 
   const handlePaymentSuccess = () => {
     setShowPayment(false);
-    setShowConsole(true);
-    setTimeout(() => setConsoleStep(3), 500);
+    setShowServerStart(true);
+    setServerStartProgress(0);
+    
+    const duration = 25000;
+    const interval = 100;
+    const steps = duration / interval;
+    let currentStep = 0;
+    
+    const progressInterval = setInterval(() => {
+      currentStep++;
+      setServerStartProgress((currentStep / steps) * 100);
+      
+      if (currentStep >= steps) {
+        clearInterval(progressInterval);
+        setTimeout(() => {
+          setShowServerStart(false);
+          navigate("/console");
+        }, 500);
+      }
+    }, interval);
+  };
+
+  const handleApplyPromo = () => {
+    if (promoCode.toLowerCase() === "vver") {
+      setPromoApplied(true);
+      setTariffPrice(0);
+    }
   };
 
   const scrollToSection = (id: string) => {
@@ -950,6 +979,37 @@ const Index = () => {
             </Card>
 
             <div className="space-y-3">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-secondary-900">Промокод:</div>
+                <div className="flex gap-2">
+                  <Input
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder="Введите промокод"
+                    className="flex-1"
+                    disabled={promoApplied}
+                  />
+                  <Button
+                    onClick={handleApplyPromo}
+                    variant="outline"
+                    className="border-primary-500 text-primary-600 hover:bg-primary-50"
+                    disabled={promoApplied || !promoCode}
+                  >
+                    {promoApplied ? (
+                      <><Icon name="Check" className="mr-2" size={16} />Применён</>
+                    ) : (
+                      "Применить"
+                    )}
+                  </Button>
+                </div>
+                {promoApplied && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm text-green-700 flex items-center gap-2">
+                    <Icon name="Gift" size={16} />
+                    Промокод активирован! Полный доступ бесплатно 🎉
+                  </div>
+                )}
+              </div>
+
               <div className="text-sm font-medium text-secondary-900">Способ оплаты:</div>
               
               <Button
@@ -957,7 +1017,7 @@ const Index = () => {
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white h-14 text-base"
               >
                 <Icon name="Smartphone" className="mr-2" size={20} />
-                Оплатить через СБП
+                {promoApplied ? "Активировать бесплатно" : "Оплатить через СБП"}
                 <Icon name="ArrowRight" className="ml-2" size={20} />
               </Button>
 
@@ -997,6 +1057,75 @@ const Index = () => {
             >
               Отмена
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showServerStart} onOpenChange={() => {}}>
+        <DialogContent className="max-w-2xl bg-secondary-900 border-secondary-700 text-white" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Rocket" className="text-primary-500 animate-pulse" size={24} />
+              Запуск сервера
+            </DialogTitle>
+            <DialogDescription className="text-secondary-400">
+              Подождите, идёт инициализация вашего хостинга...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-secondary-800 rounded-lg p-4 font-mono text-sm">
+              <div className="space-y-2 text-secondary-300">
+                <div className={serverStartProgress > 10 ? "text-green-400" : ""}>
+                  {serverStartProgress > 10 ? "✓" : "⋯"} Проверка системных требований...
+                </div>
+                <div className={serverStartProgress > 20 ? "text-green-400" : ""}>
+                  {serverStartProgress > 20 ? "✓" : "⋯"} Создание виртуального окружения...
+                </div>
+                <div className={serverStartProgress > 35 ? "text-green-400" : ""}>
+                  {serverStartProgress > 35 ? "✓" : "⋯"} Настройка PHP 8.2 и MySQL 8.0...
+                </div>
+                <div className={serverStartProgress > 50 ? "text-green-400" : ""}>
+                  {serverStartProgress > 50 ? "✓" : "⋯"} Установка SSL-сертификата...
+                </div>
+                <div className={serverStartProgress > 65 ? "text-green-400" : ""}>
+                  {serverStartProgress > 65 ? "✓" : "⋯"} Конфигурация веб-сервера Nginx...
+                </div>
+                <div className={serverStartProgress > 80 ? "text-green-400" : ""}>
+                  {serverStartProgress > 80 ? "✓" : "⋯"} Инициализация файловой системы...
+                </div>
+                <div className={serverStartProgress > 90 ? "text-green-400" : ""}>
+                  {serverStartProgress > 90 ? "✓" : "⋯"} Запуск служб мониторинга...
+                </div>
+                <div className={serverStartProgress >= 100 ? "text-green-400" : ""}>
+                  {serverStartProgress >= 100 ? "✓" : "⋯"} Финализация настроек...
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-secondary-400">Прогресс запуска</span>
+                <span className="text-primary-400 font-mono">{Math.round(serverStartProgress)}%</span>
+              </div>
+              <div className="w-full bg-secondary-800 rounded-full h-3">
+                <div 
+                  className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${serverStartProgress}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {serverStartProgress >= 100 && (
+              <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 text-center">
+                <div className="text-green-400 font-semibold mb-2 flex items-center justify-center gap-2">
+                  <Icon name="CheckCircle" size={20} />
+                  Сервер успешно запущен!
+                </div>
+                <div className="text-sm text-secondary-300">
+                  Переход в панель управления...
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
