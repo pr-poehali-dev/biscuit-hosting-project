@@ -9,6 +9,7 @@ import Icon from "@/components/ui/icon";
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState("home");
+  const [showModal, setShowModal] = useState(false);
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -35,7 +36,7 @@ const Index = () => {
               <button onClick={() => scrollToSection("faq")} className="text-secondary-700 hover:text-primary-500 transition-colors">FAQ</button>
               <button onClick={() => scrollToSection("contact")} className="text-secondary-700 hover:text-primary-500 transition-colors">Контакты</button>
             </div>
-            <Button className="bg-primary-500 hover:bg-primary-600 text-white">
+            <Button onClick={() => scrollToSection("pricing")} className="bg-primary-500 hover:bg-primary-600 text-white">
               Начать
             </Button>
           </div>
@@ -56,7 +57,7 @@ const Index = () => {
               Быстрые серверы, SSD-хранилище и оптимизированная инфраструктура для вашего успеха в интернете
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-primary-500 hover:bg-primary-600 text-white text-lg px-8 transition-transform hover:scale-105">
+              <Button onClick={() => scrollToSection("pricing")} size="lg" className="bg-primary-500 hover:bg-primary-600 text-white text-lg px-8 transition-transform hover:scale-105">
                 Попробовать бесплатно
                 <Icon name="ArrowRight" className="ml-2" size={20} />
               </Button>
@@ -76,6 +77,96 @@ const Index = () => {
               <div>
                 <div className="text-4xl font-heading font-bold text-primary-500">5000+</div>
                 <div className="text-secondary-600 mt-2">Клиентов</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-4xl font-heading font-bold text-secondary-900 mb-6">
+                  Управляйте хостингом<br />
+                  <span className="text-primary-500">из терминала</span>
+                </h2>
+                <p className="text-lg text-secondary-700 mb-6">
+                  Полный контроль над вашими файлами, настройками и тарифами через удобный интерфейс командной строки
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <Icon name="Check" className="text-primary-500" size={16} />
+                    </div>
+                    <span className="text-secondary-700">Мгновенный доступ к файлам</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <Icon name="Check" className="text-primary-500" size={16} />
+                    </div>
+                    <span className="text-secondary-700">Быстрое переключение тарифов</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                      <Icon name="Check" className="text-primary-500" size={16} />
+                    </div>
+                    <span className="text-secondary-700">Полная автоматизация задач</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <div className="bg-secondary-800 rounded-lg shadow-2xl overflow-hidden border-2 border-secondary-700">
+                  <div className="bg-secondary-900 px-4 py-3 flex items-center gap-2 border-b border-secondary-700">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <span className="text-secondary-400 text-sm ml-4 font-mono">biskvit-console</span>
+                  </div>
+                  <div className="p-6 font-mono text-sm space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-primary-500">user@biskvit:~$</span>
+                      <span className="text-secondary-300">ls -la</span>
+                    </div>
+                    <div className="text-secondary-400 pl-4 space-y-1">
+                      <div className="flex items-center gap-3">
+                        <Icon name="Folder" className="text-primary-400" size={14} />
+                        <span>public_html</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Icon name="Folder" className="text-primary-400" size={14} />
+                        <span>logs</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Icon name="FileText" className="text-secondary-500" size={14} />
+                        <span>index.php</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Icon name="FileText" className="text-secondary-500" size={14} />
+                        <span>config.json</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-4">
+                      <span className="text-primary-500">user@biskvit:~$</span>
+                      <span className="text-secondary-300">show-tariff</span>
+                    </div>
+                    <div className="bg-secondary-900 rounded p-3 mt-2">
+                      <div className="text-primary-400 mb-2">Текущий тариф: <span className="text-white font-semibold">Бизнес</span></div>
+                      <div className="text-secondary-400 text-xs space-y-1">
+                        <div>• SSD: 42GB / 50GB</div>
+                        <div>• Сайтов: 3 / 5</div>
+                        <div>• Трафик: безлимит</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-4">
+                      <span className="text-primary-500">user@biskvit:~$</span>
+                      <span className="text-secondary-300 animate-pulse">_</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
